@@ -1,0 +1,9 @@
+env/
+dags/__pychache__/
+
+__pycache__/
+
+logs/
+
+build/
+*.env
