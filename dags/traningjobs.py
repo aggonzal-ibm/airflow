@@ -40,7 +40,7 @@ def procesar_cola(ti):
     # Obtenemos la cola ordenada de XCom
     queue_contents = ti.xcom_pull(key='queue_contents', task_ids=['read_queue_task'])
     print(f"Cola de solicitudes en Xcom: {queue_contents}")        
-
+  
 
     
 def training(ti):
@@ -62,24 +62,33 @@ def training(ti):
     
     
     
-    # Tomar el primer elemento de queue_contents y marcarlo como en proceso
+   
+    
+  
+   
+    dag_id = 'process_jobs'
+    task_id = 'training'        
+   
+
+    estado = get_task_status(dag_id, task_id)
+    
+    
+    if estado == "running":
+        print("El entrenamiento ya se está ejecutando, no se realizarán más acciones.")
+        pass
+    
+     # Tomar el primer elemento de queue_contents y marcarlo como en proceso
     queue_elem = queue[0]
     queue_elem["Status"] = "P"
-    print("Antes de escribir",queue_elem)
+   
     update_queue(queue_elem)
 
     print(f"Inicia entrenamiento de {queue_elem['projectID']} con fecha {queue_elem['date']}")
     
-  
-    try_number = 1
-    dag_id = 'process_jobs'
-    task_id = 'training'        
-    execution_date = datetime(2023,2,27)
-
-    estado = get_task_status(dag_id, task_id) 
+    ti.xcom_push(key='training_status', value=estado)
     print("Se inicia Entrenamiento-----> Estado Actual: ",estado)
    
-    time.sleep(360)
+    time.sleep(60)
     
 
 
@@ -141,6 +150,10 @@ def read_queue(ti):
     ti.xcom_push(key='queue_contents', value=queue_list)
 
     print(f"Cola de solicitudes: {queue_list}")
+    estado = ti.xcom_pull(key='training_status', task_ids='training')
+    print("El estado actual de la tarea de entrenamiento es: ",  estado)
+  
+   
      
         
         
